@@ -29,3 +29,7 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 .loggedIn #curPlayer{
      display: block;
 }
+
+.online{background: url(../images/online.png) no-repeat; background-position-x: calc(100% - 24px)}
+.challenge{background: url(../images/challenge.png) no-repeat; background-position-x: calc(100% - 24px)}
+.fight{background: url(../images/fight.png) no-repeat; background-position-x: calc(100% - 24px)}

@@ -154,7 +154,7 @@
                $("#btnHideChallenge").on("click", function(){
                     fs.rejectChallenge();
                });
-               $(document).on("click", ".aPlayer", function(evt){
+               $(document).on("mouseup", ".aPlayer", function(evt){
                     fs.issueChallenge(mainUser, $(this).data("user"));
                })
           });

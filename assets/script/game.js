@@ -1,4 +1,10 @@
 let allPlayers = [];
+const statusIcons ={
+     2:"online",
+     3:"challenge",
+     4:"challenge",
+     5:"fight"
+}
 let mainUser = {
      status:1,
      name: "",
@@ -34,7 +40,7 @@ let gameControls = {
           let existplayer = allPlayers.find(o => o.userName === player.userName);
           if(!existplayer){
                allPlayers.push(player);
-               let playerCard = $("<div class='aPlayer'>").html(player.name + " " + player.status);
+               let playerCard = $("<div class='aPlayer online'>").html(player.name);
                playerCard.attr("data-user",player.userName);
                $("#players .card-body").append(playerCard);
           }
@@ -43,7 +49,9 @@ let gameControls = {
           let playerIndex = allPlayers.findIndex(o => o.userName === player.userName);
           if(playerIndex > -1){
                allPlayers[playerIndex] = player;
-               $(`*[data-user="${player.userName}"]`).html(`${player.name} ${player.status}`);
+               $(`*[data-user="${player.userName}"]`).html(`${player.name}`).attr("class", "aPlayer").addClass(statusIcons[player.status]);
+
+
           }else{
                allPlayers.push(player);
           }
