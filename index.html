@@ -186,6 +186,10 @@
                     $(".replaySection").removeClass("d-none");
                     $(this).parent().addClass("d-none");
                })
+               $(".btnStopDuel").on("click", function(){
+                    fs.removeDuel(mainUser, myOpp);
+                    gameControls.resetCard();
+               })
                $(".optionImg").on("click", function(){
                     $(".optionImg").removeClass("chosen");
                     $(this).addClass("chosen");

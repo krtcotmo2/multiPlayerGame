@@ -182,7 +182,6 @@ let fs = {
           });
      },
      setUserChoice: async (player, value) => {
-          const playerType ={0:"opp2", 1:"opp1"}
           let  playerChoice = db.collection('challenges').doc(player.duelId);
           if(player.challenger){
                playerChoice.set({
@@ -220,6 +219,20 @@ let fs = {
                }
                gameControls.showResults(result, retChoice);
           });
+     },
+     removeDuel: (player1, player2) => {
+          let  duel = db.collection('challenges').doc(player1.duelId);
+          duel.delete();
+
+         db.collection('users').doc(player1.userName).set({
+                    status : 2
+               }, { merge: true }
+          )
+          .then(function(){
+               db.collection('users').doc(player2.userName).set({
+                    status : 2
+               }, { merge: true })
+          });         
      }
 }
 
