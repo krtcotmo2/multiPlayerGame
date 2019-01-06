@@ -18,11 +18,13 @@ let fs = {
           thisObj.name= theName,
           thisObj.userName= theId,
           thisObj.wins= 0,
+          thisObj.ties= 0,
           thisObj.loses= 0,
           thisObj.status= 2
           db.collection("users").doc(theId).set({
                name: thisObj.name,
                wins: thisObj.wins,
+               ties: thisObj.ties,
                loses: thisObj.loses,
                status: thisObj.status
           })
@@ -70,6 +72,7 @@ let fs = {
                          name: change.doc.data().name,
                          userName: change.doc.id,
                          wins: change.doc.data().wins,
+                         ties: change.doc.data().ties,
                          loses: change.doc.data().loses,
                          status: change.doc.data().status,
                          duelId: change.doc.data().duelId
@@ -86,13 +89,16 @@ let fs = {
                               mainUser = aPlayer;                              
                               gameControls.showChallenge();
                          }
-                         firebase.database().ref(`users/${aPlayer.userName}/connection`).set(true);
+                         if(aPlayer.status ==5 && mainUser.userName == aPlayer.userName){
+                              gameControls.startGame();
+                         }
                     }
                     if (change.type === "removed") {
                          aPlayer.duelId="";
                          theStatus = db.collection('users').doc(curPlayer.docs[0].id).set({duelId:""}, { merge: true })
                          firebase.database().ref(`users/${aPlayer.userName}/connection`).set(false);
                          gameControls.removePlayer(aPlayer);
+                         gameControls.resetCard();
                     }
                });
           })
@@ -107,11 +113,11 @@ let fs = {
           gameControls.hideMainStage();
      },
      issueChallenge: async (challenger, opponent) => {
+          challenger.challenger = true;
           db = firebase.firestore();
           myOpp = allPlayers.find(o => o.userName === opponent);
           myOpp.status = 3;
-          challenger.status=4;       
-          
+          challenger.status=4; 
           db.collection("challenges").add({
                opp1: mainUser.userName,
                opp2: myOpp.userName
@@ -141,6 +147,7 @@ let fs = {
           })         
      },
      rejectChallenge: async () => {
+          mainUser.challenger = false;
           db = firebase.firestore();
           db.collection('challenges').doc(mainUser.duelId).delete()
           .then(db.collection('users').doc(myOpp.userName).set({
@@ -160,6 +167,7 @@ let fs = {
           });
      }, 
      acceptChallenge: async () => {
+          mainUser.challenger = false;
           db.collection('users').doc(myOpp.userName).set({
                status: 5,
                }, { merge: true })
@@ -171,6 +179,46 @@ let fs = {
           )
           .catch(function(error) {
                console.error("Error adding challenger status: ", error);
+          });
+     },
+     setUserChoice: async (player, value) => {
+          const playerType ={0:"opp2", 1:"opp1"}
+          let  playerChoice = db.collection('challenges').doc(player.duelId);
+          if(player.challenger){
+               playerChoice.set({
+                    opp1Choice : value
+               }, { merge: true });
+     
+          }else{
+               playerChoice.set({
+                    opp2Choice : value
+               }, { merge: true });
+     
+          }
+          
+     },
+     checkWinner: async (player1, player2) => {
+          let challenger = player1.challenger == true ? player1 : player2;
+          let opponent = player1.challenger == true ? player2 : player1;
+          gameResult = await db.collection('challenges').doc(challenger.duelId).get()
+          .then(function(doc){               
+               let opp1C = doc.data().opp1Choice;
+               let opp2C = doc.data().opp2Choice;
+               let result = challenger.name == mainUser.name ? "You Won" : "You Lost";
+               let retChoice = challenger.name != mainUser.name ? opp1C : opp2C;
+               if(opp1C == opp2C ){
+                    challenger.ties++;
+                    opponent.ties++;
+                    result="You Tied"
+               } else if( opp1C == undefined  || (opp1C == "rock" && opp2C == "paper") || (opp1C == "scissors" && opp2C == "rock") || (opp1C == "paper" && opp2C == "scissors") ){
+                    challenger.loses++;
+                    opponent.wins++;
+                    result = challenger.name == mainUser.name ? "You Lost" : "You Won";
+               }else{
+                    challenger.wins++;
+                    opponent.loses++;
+               }
+               gameControls.showResults(result, retChoice);
           });
      }
 }

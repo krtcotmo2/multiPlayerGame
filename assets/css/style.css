@@ -1,22 +1,20 @@
 body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-#login { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-#login h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-#login h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
 #mesloginsage p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-#login a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-#login, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-#load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
 @media (max-width: 600px) {
      body, #message { margin-top: 0; background: white; box-shadow: none; }
      body { border-top: 16px solid #ffa100; }
 }
-
 footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 100%; border-top:1px solid #ccc;}
+.card-body{padding:0px;}
 
+/* LOGIN SECTION */
+#login { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+#login h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+#login h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
 #newUserSection, #mainGame{display: none;}
-#curPlayer{display: none;}
-#curPlayer button{float:right; margin-right:12px;}
-#curPlayer h2{display: inline;}
+#login a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+#login, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+#load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
 .loggedIn{
      width:100% !important;
      max-width:100% !important;
@@ -26,13 +24,45 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 .loggedIn form{
      display:none;
 }
-.loggedIn #curPlayer{
+.loggedIn #curPlayerHeader{
      display: block;
 }
-.card-body{padding:0px;}
+
+/* HEADER OF PAGE SHOWING CURRNET LOGGED IN PERSON AND LOG OUT BUTTON */
+#curPlayerHeader{display: none;}
+#curPlayerHeader button{    margin-right: 12px;
+     position: absolute;
+     right: 0px;
+     top: 12px;}
+#curPlayerHeader h2{display: inline;}
+
+/* CURRENT PLAYER SECTION*/
 #players{min-height: 124px;}
 .aPlayer{padding:24px 12px; cursor:pointer; border-bottom:1px solid #ccc;}
 .aPlayer:hover{background-color: #ccc;}
-.online{background: url(../images/online.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
-.challenge{background: url(../images/challenge.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
-.fight{background: url(../images/fight.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+     /* STATUS */
+     .online{background: url(../images/online.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+     .challenge{background: url(../images/challenge.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+     .fight{background: url(../images/fight.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+
+
+/* CURRENT GAME SECTION*/
+.optionImg{
+     border-radius: 30px;
+     cursor: pointer;
+     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.19);
+     transition: 0.5s;
+}
+.optionImg:hover, .optionImg.chosen {
+     background: #ccc;
+     box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 6px 0 rgba(0, 0, 0, 0.19);
+     transform: scale(1.1) translateY(-3px);
+     transition: 0.5s;
+ }
+ .btnHide{
+     font-size: 0.7em;
+     padding: 4px;
+     position: absolute;
+     top: 10px;
+     right: 12px;
+ }
