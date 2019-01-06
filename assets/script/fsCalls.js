@@ -158,7 +158,8 @@ let fs = {
           .catch(function(error) {
                console.error("Error adding challenger status: ", error);
           });
-     }, acceptChallenge: async () => {
+     }, 
+     acceptChallenge: async () => {
           db.collection('users').doc(myOpp.userName).set({
                status: 5,
                }, { merge: true })

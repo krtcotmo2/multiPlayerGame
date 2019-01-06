@@ -150,7 +150,9 @@
                $("#curPlayer button").on("click", function(){
                     fs.logOut(mainUser.userName, mainUser);
                });
-               $("#btnTakeChallenge").on("click", );
+               $("#btnTakeChallenge").on("click", function(){
+                    fs.acceptChallenge();
+               });
                $("#btnHideChallenge").on("click", function(){
                     fs.rejectChallenge();
                });

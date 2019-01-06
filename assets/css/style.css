@@ -29,7 +29,10 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 .loggedIn #curPlayer{
      display: block;
 }
-
-.online{background: url(../images/online.png) no-repeat; background-position-x: calc(100% - 24px)}
-.challenge{background: url(../images/challenge.png) no-repeat; background-position-x: calc(100% - 24px)}
-.fight{background: url(../images/fight.png) no-repeat; background-position-x: calc(100% - 24px)}
+.card-body{padding:0px;}
+#players{min-height: 124px;}
+.aPlayer{padding:24px 12px; cursor:pointer; border-bottom:1px solid #ccc;}
+.aPlayer:hover{background-color: #ccc;}
+.online{background: url(../images/online.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+.challenge{background: url(../images/challenge.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
+.fight{background: url(../images/fight.png) no-repeat; background-position-x: calc(100% - 12px); background-position-y:24px}
