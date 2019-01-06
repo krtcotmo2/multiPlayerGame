@@ -54,21 +54,6 @@ let fs = {
                thisObj.userName = curPlayer.docs[0].id;
                thisObj.name = curPlayer.docs[0].data().name;
                gameControls.showMainStage(curPlayer.docs[0].data());
-               /*
-               userOnlineStatus = firebase.database().ref(`users/${thisObj.userName}/connection`);
-               userOnlineStatus.onDisconnect().set(false);
-               userOnlineStatus.on("value").then(function(arg){
-                    if(!arg){
-                         theStatus.set({
-                              status: 1,
-                              duelId:""
-                              }, { merge: true })
-                         }
-                    }
-               );
-               */
-               
-
           }else if(curPlayer.size == 0){
                $("#mainModal .modal-title").text(`Login Issue`);          
                $("#mainModal .modal-body").text("Username does not exist");
@@ -158,10 +143,12 @@ let fs = {
      },
      rejectChallenge: async () => {
           db = firebase.firestore();
-          db.collection('users').doc(myOpp.userName).set({
+          db.collection('challenges').doc(mainUser.duelId).delete()
+          .then(db.collection('users').doc(myOpp.userName).set({
                status: 2,
                duelId:""
-          }, { merge: true })
+               }, { merge: true })
+          )
           .then(
                db.collection('users').doc(mainUser.userName).set({
                     status: 2,
