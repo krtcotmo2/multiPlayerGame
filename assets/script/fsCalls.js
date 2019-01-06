@@ -2,7 +2,6 @@ let userOnlineStatus;
 
 
 let fs = {
-     db = firebase.firestore(),
      trackingStarted:false,
                
      newUser: async (theName, theId, thisObj) =>{
