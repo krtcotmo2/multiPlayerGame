@@ -93,10 +93,10 @@
                </div>
 
                <div class="card col-3 px-0">
-                    <div class="card-header">
+                    <div class="card-header" >
                          Leader Board
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="leaderBoard">
                     </div>
                </div>
           </div>
@@ -163,6 +163,7 @@
                     document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
                }
                fs.syncPlayers();
+               fs.getLeaderboard();
                $("#btnCreateID").on("click", function () {
                     $("#loginSection").css("display", "none");
                     $(this).css("display", "none");

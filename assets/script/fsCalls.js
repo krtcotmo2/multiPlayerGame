@@ -1,6 +1,5 @@
 let fs = {
-     trackingStarted:false,
-     obj: this,       
+      
      newUser: async (theName, theId, thisObj) =>{
           db = firebase.firestore();        
           potentialNew = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", theId).get();
@@ -51,6 +50,9 @@ let fs = {
                thisObj.dbID = curPlayer.docs[0].id;
                thisObj.userName = curPlayer.docs[0].id;
                thisObj.name = curPlayer.docs[0].data().name;
+               thisObj.wins = curPlayer.docs[0].data().wins;
+               thisObj.loses = curPlayer.docs[0].data().loses;
+               thisObj.ties = curPlayer.docs[0].data().ties;
                gameControls.showMainStage(curPlayer.docs[0].data());
           }else if(curPlayer.size == 0){
                $("#mainModal .modal-title").text(`Login Issue`);          
@@ -59,6 +61,35 @@ let fs = {
                $("#mainModal").modal();
           }
      },
+     getLeaderboard: () => {
+          db = firebase.firestore();
+          let lb = db.collection("users").where("status", ">", 0);
+          lb.get();
+          lb.onSnapshot(function(snapshot){
+               snapshot.docChanges().forEach(function (change) {
+                    let aPlayer = {
+                         name: change.doc.data().name,
+                         userName: change.doc.id,
+                         wins: change.doc.data().wins,
+                         ties: change.doc.data().ties,
+                         loses: change.doc.data().loses,
+                         status: change.doc.data().status,
+                         duelId: change.doc.data().duelId,
+                         points: (change.doc.data().wins*2) + (change.doc.data().ties),
+                         winPercent: change.doc.data().wins/(change.doc.data().wins + change.doc.data().loses + change.doc.data().ties)
+                    };
+                    let ind = leaderBoard.findIndex(function(obj){
+                         return obj.userName == aPlayer.userName;
+                    });
+                    if(ind == -1){
+                         leaderBoard.push(aPlayer);
+                    }else{
+                         leaderBoard[ind] = aPlayer;
+                    }
+                    gameControls.setLeaderBoard();
+               })
+          })
+     },    
      syncPlayers: () =>{          
           db = firebase.firestore();
           let curPlayers = db.collection("users").where("status", ">", 1);
@@ -72,7 +103,8 @@ let fs = {
                          ties: change.doc.data().ties,
                          loses: change.doc.data().loses,
                          status: change.doc.data().status,
-                         duelId: change.doc.data().duelId
+                         duelId: change.doc.data().duelId,
+                         challenger: change.doc.data().challenger
                     };
                     if (change.type === "added") {
                          if(change.doc.data().name != undefined){
@@ -83,33 +115,62 @@ let fs = {
                     if (change.type === "modified") {
                          gameControls.updatePlayer(aPlayer);                        
                          if(aPlayer.status ==3 && mainUser.userName == aPlayer.userName){
-                              mainUser = aPlayer;                              
+                              mainUser = aPlayer;                             
                               gameControls.showChallenge();
                          }
-                         if(aPlayer.status ==5 && mainUser.userName == aPlayer.userName){
+                         if(aPlayer.status ==4 && mainUser.userName == aPlayer.userName){
+                              mainUser = aPlayer;
+                         }
+                         if(aPlayer.status ==5 && mainUser.userName == aPlayer.userName && aPlayer.duelId != ""){
+                              mainUser = aPlayer; 
                               gameControls.startGame();
                          }
+                         if(aPlayer.status ==5 && mainUser.userName == aPlayer.userName && aPlayer.duelId == ""){
+                              aPlayer.wins++;
+                              db.collection('users').doc(curPlayer.docs[0].id).set({duelId:"", status:2, wins:aPlayer.wins}, { merge: true })
+                              clearInterval(gameControls.theTimer);
+                         }
+                         let ind = allPlayers.findIndex(function(obj){
+                              return obj.userName == aPlayer.userName;
+                         });
+                         allPlayers[ind] = aPlayer;
                     }
                     if (change.type === "removed") {
                          aPlayer.duelId="";
                          theStatus = db.collection('users').doc(curPlayer.docs[0].id).set({duelId:""}, { merge: true })
                          gameControls.removePlayer(aPlayer);
                          gameControls.resetCard();
+                         allPlayers.filter(function(obj){
+                              obj.userName != aPlayer.userName;
+                         })
                     }
                });
           })
      }, 
      logOut: async (userName, thisObj) => {
-          db = firebase.firestore();          
-          thisObj.status = 1; 
+          db = firebase.firestore(); 
+          if(thisObj.status == 5) {
+               console.log(`${thisObj.name} will forefit`);  
+               thisObj.loses++;      
+               clearInterval(gameControls.theTimer);     
+          }         
+          thisObj.status = 1;           
           let  theStatus = await db.collection('users').doc(userName);
-          let  setWithMerge = theStatus.set({
-               status: 1
+          theStatus.set({
+               status: 1,
+               wins: thisObj.wins,
+               loses: thisObj.loses,
+               ties:thisObj.ties,
+               duelId:""
           }, { merge: true });          
           gameControls.hideMainStage();
      },
-     issueChallenge: async (challenger, opponent, theFunc = this.obj) => {
-          challenger.challenger = true;
+     issueChallenge: async (challenger, opponent) => {
+          let theStatus = allPlayers.find(function(arg){
+               return arg.userName == opponent
+          }).status;
+          if (theStatus != 2)
+          return;
           db = firebase.firestore();
           myOpp = allPlayers.find(o => o.userName === opponent);
           myOpp.status = 3;
@@ -123,12 +184,14 @@ let fs = {
                mainUser.duelId = docRef.id;
                db.collection('users').doc(challenger.userName).set({
                     status: 4,
-                    duelId:docRef.id
+                    duelId:docRef.id,
+                    challenger:true
                }, { merge: true })
                .then(
                     db.collection('users').doc(opponent).set({
                          status: 3,
-                         duelId:docRef.id
+                         duelId:docRef.id,
+                         challenger:false
                     }, { merge: true }),
                     fs.watchChallenge(docRef.id)
                )
@@ -143,18 +206,19 @@ let fs = {
           })         
      },
      rejectChallenge: async () => {
-          mainUser.challenger = false;
           db = firebase.firestore();
           db.collection('challenges').doc(mainUser.duelId).delete()
           .then(db.collection('users').doc(myOpp.userName).set({
                status: 2,
-               duelId:""
+               duelId:"",
+               challenger:false
                }, { merge: true })
           )
           .then(
                db.collection('users').doc(mainUser.userName).set({
                     status: 2,
-                    duelId:""
+                    duelId:"",
+                    challenger:false
                }, { merge: true }),
                $("#mainModal").modal("hide")
           )
@@ -163,13 +227,14 @@ let fs = {
           });
      }, 
      acceptChallenge: async () => {
-          mainUser.challenger = false;
           db.collection('users').doc(myOpp.userName).set({
                status: 5,
+               challenger: true
                }, { merge: true })
           .then(
                db.collection('users').doc(mainUser.userName).set({
                     status: 5,
+                    challenger: false
                }, { merge: true }),
                $("#mainModal").modal("hide")
           )
@@ -232,7 +297,8 @@ let fs = {
                     loses: player1.loses,
                     ties: player1.ties,
                     challengeRematch:null,
-                    rematchTo:null
+                    rematchTo:null,
+                    challenger:false
                }, { merge: true }
           )
           .then(function(){
@@ -242,7 +308,8 @@ let fs = {
                     loses: player2.loses,
                     ties: player2.ties,
                     challengeRematch:null,
-                    rematchTo:null
+                    rematchTo:null,
+                    challenger:false
                }, { merge: true })
           });         
      },

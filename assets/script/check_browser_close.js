@@ -3,7 +3,7 @@ let validNavigation = false;
 function wireUpEvents() {
      let leave_message = 'You sure you want to leave?'
      function goodbye(e) {
-          fs.logOut(mainUser.userName, fs);
+          fs.logOut(mainUser.userName, mainUser);
           return leave_message;
      }
      window.onbeforeunload = goodbye;

@@ -1,4 +1,5 @@
 let allPlayers = [];
+let leaderBoard = [];
 const statusIcons = {
      2: "online",
      3: "challenge",
@@ -27,6 +28,7 @@ let myOpp = {
 };
 
 let gameControls = {
+     theTimer:0,
      showMainStage: player => {
           $("#mainGame").css("display", "flex");
           $("#login").addClass("loggedIn");
@@ -36,7 +38,7 @@ let gameControls = {
           $("#mainGame").css("display", "none");
           $("#login").removeClass("loggedIn");
           $("#login input[type='text']").val("");
-          $("#players .card-body").html("");
+          //$("#players .card-body").html("");
           $("#loginSection").css("display", "block");
           $("#newUserSection").css("display", "none");
      },
@@ -44,9 +46,11 @@ let gameControls = {
           let existplayer = allPlayers.find(o => o.userName === player.userName);
           if (!existplayer) {
                allPlayers.push(player);
-               let playerCard = $("<div class='aPlayer online'>").html(player.name);
-               playerCard.attr("data-user", player.userName);
-               $("#players .card-body").append(playerCard);
+               if(player.userName != mainUser.userName){
+                    let playerCard = $("<div class='aPlayer online'>").html(player.name);
+                    playerCard.attr("data-user", player.userName);
+                    $("#players .card-body").append(playerCard);
+               }
           }
      },
      updatePlayer: player => {
@@ -82,15 +86,16 @@ let gameControls = {
           $(".optionImg").removeClass("chosen");
           $("#gameCard .inst").css("display", dirShown == "true" ? "block" : "none");
           let count = 5;
-          $("#timerSection").text(count);
-          let theTimer = setInterval(function () {
+          $("#timerSection").text(count);          
+          gameControls.theTimer = setInterval(function () {
                count--;
                $("#timerSection").text(count);
                if (count == 0) {
                     fs.checkWinner(mainUser, myOpp);                   
-                    clearInterval(theTimer);
+                    clearInterval(gameControls.theTimer);
                }
-          }, 1000)
+          }, 1000);
+          let s="";
      },
      showResults: (result, oppChoice) => {
           $(".gameResults").removeClass("d-none");
@@ -112,6 +117,28 @@ let gameControls = {
           $(".gameResults").addClass("d-none");
           $(".rematchResponse .oppName").text(myOpp.name);
           $(".rematchResponse").removeClass("d-none");
+     },
+     setLeaderBoard: () => {
+          $("#leaderBoard").html("");
+          leaderBoard.sort(function(a,b){
+               if(a.points<b.points){
+                    return   1;
+               }else if(a.points> b.points){
+                    return -1
+               }else{
+                    if(a.wins + a.loses + a.ties < b.wins + b.loses + b.ties){
+                         return 1;
+                    }else{
+                         return -1;
+                    }
+               }
+          });
+          leaderBoard.forEach(function(a){
+               let playerCard = $("<div class='aPlayer'>").html(`${a.name} ${a.points} `);
+               $("#leaderBoard").append(playerCard);
+
+          });
+         
      }
 };
 
