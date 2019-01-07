@@ -1,9 +1,6 @@
-let userOnlineStatus;
-
-
 let fs = {
      trackingStarted:false,
-               
+     obj: this,       
      newUser: async (theName, theId, thisObj) =>{
           db = firebase.firestore();        
           potentialNew = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", theId).get();
@@ -96,7 +93,6 @@ let fs = {
                     if (change.type === "removed") {
                          aPlayer.duelId="";
                          theStatus = db.collection('users').doc(curPlayer.docs[0].id).set({duelId:""}, { merge: true })
-                         firebase.database().ref(`users/${aPlayer.userName}/connection`).set(false);
                          gameControls.removePlayer(aPlayer);
                          gameControls.resetCard();
                     }
@@ -112,7 +108,7 @@ let fs = {
           }, { merge: true });          
           gameControls.hideMainStage();
      },
-     issueChallenge: async (challenger, opponent) => {
+     issueChallenge: async (challenger, opponent, theFunc = this.obj) => {
           challenger.challenger = true;
           db = firebase.firestore();
           myOpp = allPlayers.find(o => o.userName === opponent);
@@ -123,7 +119,6 @@ let fs = {
                opp2: myOpp.userName
           })
           .then(function(docRef){
-               console.log(docRef.id);
                myOpp.duelId = docRef.id;
                mainUser.duelId = docRef.id;
                db.collection('users').doc(challenger.userName).set({
@@ -134,7 +129,8 @@ let fs = {
                     db.collection('users').doc(opponent).set({
                          status: 3,
                          duelId:docRef.id
-                    }, { merge: true })
+                    }, { merge: true }),
+                    fs.watchChallenge(docRef.id)
                )
                .catch(function(error) {
                     console.error("Error adding challenger status: ", error);
@@ -180,17 +176,22 @@ let fs = {
           .catch(function(error) {
                console.error("Error adding challenger status: ", error);
           });
+          fs.watchChallenge(mainUser.duelId);
      },
      setUserChoice: async (player, value) => {
           let  playerChoice = db.collection('challenges').doc(player.duelId);
           if(player.challenger){
                playerChoice.set({
-                    opp1Choice : value
+                    opp1C : value,
+                    challengeRematch:null,
+                    rematchTo:null
                }, { merge: true });
      
           }else{
                playerChoice.set({
-                    opp2Choice : value
+                    opp2C : value,
+                    challengeRematch:null,
+                    rematchTo:null
                }, { merge: true });
      
           }
@@ -201,15 +202,15 @@ let fs = {
           let opponent = player1.challenger == true ? player2 : player1;
           gameResult = await db.collection('challenges').doc(challenger.duelId).get()
           .then(function(doc){               
-               let opp1C = doc.data().opp1Choice;
-               let opp2C = doc.data().opp2Choice;
+               let opp1C = doc.data().opp1C;
+               let opp2C = doc.data().opp2C;
                let result = challenger.name == mainUser.name ? "You Won" : "You Lost";
                let retChoice = challenger.name != mainUser.name ? opp1C : opp2C;
-               if(opp1C == opp2C ){
+               if(opp1C == opp2C && opp1C != null ){
                     challenger.ties++;
                     opponent.ties++;
                     result="You Tied"
-               } else if( opp1C == undefined  || (opp1C == "rock" && opp2C == "paper") || (opp1C == "scissors" && opp2C == "rock") || (opp1C == "paper" && opp2C == "scissors") ){
+               } else if( opp1C == null  || (opp1C == "rock" && opp2C == "paper") || (opp1C == "scissors" && opp2C == "rock") || (opp1C == "paper" && opp2C == "scissors") ){
                     challenger.loses++;
                     opponent.wins++;
                     result = challenger.name == mainUser.name ? "You Lost" : "You Won";
@@ -217,6 +218,7 @@ let fs = {
                     challenger.wins++;
                     opponent.loses++;
                }
+               
                gameControls.showResults(result, retChoice);
           });
      },
@@ -225,14 +227,66 @@ let fs = {
           duel.delete();
 
          db.collection('users').doc(player1.userName).set({
-                    status : 2
+                    status : 2,
+                    wins: player1.wins,
+                    loses: player1.loses,
+                    ties: player1.ties,
+                    challengeRematch:null,
+                    rematchTo:null
                }, { merge: true }
           )
           .then(function(){
                db.collection('users').doc(player2.userName).set({
-                    status : 2
+                    status : 2,
+                    wins: player2.wins,
+                    loses: player2.loses,
+                    ties: player2.ties,
+                    challengeRematch:null,
+                    rematchTo:null
                }, { merge: true })
           });         
+     },
+     challengeRematch: () => {
+          db = firebase.firestore();
+          let curDuel = db.collection("challenges").doc(mainUser.duelId).set({
+               challengeRematch :true,
+               rematchTo: myOpp.userName,
+               opp1C:null,
+               opp2C:null
+          }, {merge: true});
+     },
+     watchChallenge: (arg) =>{
+          db = firebase.firestore();
+          let duel = db.collection("challenges").doc(arg);
+          duel.get();
+          duel.onSnapshot(function(snapshot){
+               if(snapshot.data() == undefined){
+                    gameControls.resetCard();
+                    return;
+               }
+               if(snapshot.data().challengeRematch == true && mainUser.userName == snapshot.data().rematchTo){
+                    gameControls.promptRematch()
+               }
+          })          
+     },
+     rematchAccpeted: () => {
+          db.collection("users").doc(mainUser.userName).set({
+               wins: mainUser.wins,
+               loses: mainUser.loses,
+               ties: mainUser.ties,
+               challengeRematch:"",
+               rematchTo:""
+          }, {merge: true })
+          .then(function(){
+               db.collection("users").doc(myOpp.userName).set({
+                    wins: myOpp.wins,
+                    loses: myOpp.loses,
+                    ties: myOpp.ties,
+                    challengeRematch:"",
+                    rematchTo:""
+               }, {merge: true });
+          })
      }
 }
+
 

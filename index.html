@@ -53,7 +53,8 @@
                <div class="card col-5 px-0">
                     <div class="card-header">
                          Current Game
-                         <button role="button" id="btnDirection" class="btn btn-secondary btnHide d-none">Toggle Directions</button>
+                         <button role="button" id="btnDirection" class="btn btn-secondary btnHide d-none">Toggle
+                              Directions</button>
                     </div>
                     <div class="card-body d-none" id="gameCard">
                          <h3 class="text-center py-2">
@@ -66,17 +67,28 @@
                          <h1 class="text-center"><span id="timerSection" class="badge badge-primary">5</span></h1>
                          <div class="container d-flex my-4 justify-content-around">
                               <img class="optionImg" src="./assets/images/optRock.png" data-value="rock" />
-                              <img class="optionImg" src="./assets/images/optPaper.png"  data-value="paper"/>
-                              <img class="optionImg" src="./assets/images/optSci.png"  data-value="scissors"/>
-                         </div>   
+                              <img class="optionImg" src="./assets/images/optPaper.png" data-value="paper" />
+                              <img class="optionImg" src="./assets/images/optSci.png" data-value="scissors" />
+                         </div>
                          <div class="gameResults d-none px-4 ">
                               <h2 class="text-center"></h2>
                               <p><span class="oppName"></span> chose <span class="oppChoice"></span></p>
-                              <button class="btnReplay">Play Again</button><button class="btnStopDuel">Call It Quits</button>
-                         </div>      
+                              <div class="row d-flex justify-content-around my-3">
+                                   <button class="btnReplay">Play Again</button><button class="btnStopDuel">Call It
+                                        Quits</button>
+                              </div>
+                         </div>
                          <div class="replaySection d-none px-4 my-3 ">
-                              You have requested a rematch, your opponent has 10 seonds to reply. If they do not respond, you will be returned bak to the main pool and you can challenge another player.
-                         </div>                
+                              You have requested a rematch, your opponent has 10 seonds to reply. If they do not
+                              respond, you will be returned bak to the main pool and you can challenge another player.
+                         </div>
+                         <div class="rematchResponse d-none px-4 my-3 ">
+                              <p><span class="oppName"></span> has challenged you to a rematch.</p>
+                              <div class="row d-flex justify-content-around my-3">
+                                   <button class="btnAcceptRe">Accept Rematch</button><button class="btnDeclineRe">Call
+                                        It Quits</button>
+                              </div>
+                         </div>
                     </div>
                </div>
 
@@ -165,7 +177,7 @@
                          //load user
                          fs.getUserId($("#tboxLogin").val().trim().toLowerCase(), mainUser);
                     }
-               })
+               });
                $("#curPlayerHeader button").on("click", function () {
                     fs.logOut(mainUser.userName, mainUser);
                });
@@ -175,25 +187,32 @@
                $("#btnHideChallenge").on("click", function () {
                     fs.rejectChallenge();
                });
-               $("#btnDirection").on("click", function(arg){
+               $("#btnDirection").on("click", function (arg) {
                     $("#gameCard .inst").toggle();
-                    localStorage.setItem("dirShown",  $("#gameCard .inst").css("display") != "none");
-               })
+                    localStorage.setItem("dirShown", $("#gameCard .inst").css("display") != "none");
+               });
                $(document).on("mouseup", ".aPlayer", function (evt) {
                     fs.issueChallenge(mainUser, $(this).data("user"));
-               })
-               $(".btnReplay").on("click", function(){
+               });
+               $(".btnReplay").on("click", function () {
                     $(".replaySection").removeClass("d-none");
-                    $(this).parent().addClass("d-none");
-               })
-               $(".btnStopDuel").on("click", function(){
+                    $(this).parent().parent().addClass("d-none");
+                    fs.challengeRematch();
+               });
+               $(".btnStopDuel").on("click", function () {
                     fs.removeDuel(mainUser, myOpp);
-                    gameControls.resetCard();
-               })
-               $(".optionImg").on("click", function(){
+               });
+               $(".btnDeclineRe").on("click", function () {
+                    fs.removeDuel(mainUser, myOpp);
+                   
+               });
+               $(".optionImg").on("click", function () {
                     $(".optionImg").removeClass("chosen");
                     $(this).addClass("chosen");
                     fs.setUserChoice(mainUser, $(this).data("value"));
+               });
+               $(".btnAcceptRe").on("click", function(){
+                    fs.rematchAccpeted();
                })
           });
      </script>

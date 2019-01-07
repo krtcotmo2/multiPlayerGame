@@ -77,7 +77,9 @@ let gameControls = {
           $("#btnDirection").removeClass("d-none");
           $(".gameResults").addClass("d-none");
           $(".replaySection").addClass("d-none");
+          $(".rematchResponse").addClass("d-none");
           let dirShown = localStorage.getItem("dirShown");
+          $(".optionImg").removeClass("chosen");
           $("#gameCard .inst").css("display", dirShown == "true" ? "block" : "none");
           let count = 5;
           $("#timerSection").text(count);
@@ -102,7 +104,14 @@ let gameControls = {
           $("#btnDirection").addClass("d-none");
           $(".gameResults").addClass("d-none");
           $(".replaySection").addClass("d-none");
-          $(".optionImg").removeClass("chosen");
+          $(".rematchResponse").addClass("d-none");
+          $(".optionImg").removeClass("chosen"); 
+     },
+     promptRematch: () => {
+          $(".replaySection").addClass("d-none");
+          $(".gameResults").addClass("d-none");
+          $(".rematchResponse .oppName").text(myOpp.name);
+          $(".rematchResponse").removeClass("d-none");
      }
 };
 
