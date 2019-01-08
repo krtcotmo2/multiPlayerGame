@@ -38,8 +38,6 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 
 /* ROW HOLDING PLAYERS, GAME, AND LEADERBOARD */
 #mainGame{padding-bottom:60px;}
-#mainGame .card{max-height:calc(100% - 200px); oveflow:hidden; overflow-y:auto;}
-
 
 /* CURRENT PLAYER SECTION*/
 #players{min-height: 124px;}
