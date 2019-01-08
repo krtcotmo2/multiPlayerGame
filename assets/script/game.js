@@ -72,7 +72,8 @@ let gameControls = {
           myOpp = allPlayers.find(o => o.duelId == mainUser.duelId && o.userName != mainUser.userName);
           $("#mainModal .modal-title").text(`Challenge issued`);
           $("#mainModal .modal-body").text(`You have been challenged by ${myOpp.name}`);
-          $("#mainModal .modal-footer").css("display", "block");
+          $("#mainModal .modal-footer").css("display", "none");
+          $("#mainModal .modal-footer.challengebtns").css("display", "block");
           $("#mainModal").modal();
      },
      startGame: () => {

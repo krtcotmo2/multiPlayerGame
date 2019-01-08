@@ -111,11 +111,15 @@
                          </button>
                     </div>
                     <div class="modal-body">
-                         <p>Modal body text goes here.</p>
+                         <p></p>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer challengebtns">
                          <button type="button" id="btnTakeChallenge" class="btn btn-primary">Accept the Challenge</button>
                          <button type="button" id="btnHideChallenge" class="btn btn-secondary">Hide like a Coward</button>
+                    </div>
+                    <div class="modal-footer forceLogout">
+                         <p>By clicking the button below, you can force log out the account. Once you force out the account, you will be able to log in.</p>
+                         <button type="button" id="btnForceOut" class="btn btn-primary">Force Logout</button>
                     </div>
                </div>
           </div>
@@ -215,6 +219,10 @@
                $(".btnAcceptRe").on("click", function(){
                     fs.rematchAccpeted();
                })
+               $("#btnForceOut").on("click", function(){
+                    fs.logOut($("#tboxLogin").val(), mainUser, true);
+                    $("#mainModal").modal("hide");
+               });
           });
      </script>
 </body>

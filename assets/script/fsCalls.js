@@ -2,7 +2,14 @@ let fs = {
       
      newUser: async (theName, theId, thisObj) =>{
           db = firebase.firestore();        
-          potentialNew = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", theId).get();
+          potentialNew = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", theId).get()
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error in checking if user exists.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal();  
+               return;                      
+           });
           if(potentialNew.size > 0){
                $("#tboxUserName").val("");
                $("#mainModal .modal-title").text(`Login Issue`);          
@@ -28,25 +35,44 @@ let fs = {
                console.log(docRef.id);
           })
           .catch(function(error) {
-               console.error("Error adding document: ", error);
-          })         
+               $("#mainModal .modal-title").text(`Error while saving new users.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });        
           gameControls.showMainStage(thisObj);
      },
      getUserId: async (userId, thisObj) => { 
           db = firebase.firestore();         
-          curPlayer = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", userId).get();
+          curPlayer = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "==", userId).get()
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while logging in.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });
           if(curPlayer.size == 1 && curPlayer.docs[0].data().status != 1){
                thisObj.status = 1;
                $("#mainModal .modal-title").text(`Login Issue`);          
                $("#mainModal .modal-body").text("Someone is logged in under that name.");
                $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal .modal-footer.forceLogout").css("display", "block");
                $("#mainModal").modal();
           }else if(curPlayer.size == 1 && (curPlayer.docs[0].data().status == 1)){
                thisObj.status = 2;                
                let  theStatus = db.collection('users').doc(curPlayer.docs[0].id);
                theStatus.set({
                    status: 2
-               }, { merge: true });
+               }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while setting status of user to logged in.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+                });
                thisObj.dbID = curPlayer.docs[0].id;
                thisObj.userName = curPlayer.docs[0].id;
                thisObj.name = curPlayer.docs[0].data().name;
@@ -64,7 +90,14 @@ let fs = {
      getLeaderboard: () => {
           db = firebase.firestore();
           let lb = db.collection("users").where("status", ">", 0);
-          lb.get();
+          lb.get()
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while loading the leaderboard.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });;
           lb.onSnapshot(function(snapshot){
                snapshot.docChanges().forEach(function (change) {
                     let aPlayer = {
@@ -93,7 +126,14 @@ let fs = {
      syncPlayers: () =>{          
           db = firebase.firestore();
           let curPlayers = db.collection("users").where("status", ">", 1);
-          curPlayers.get();
+          curPlayers.get()
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while getting active users.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });
           curPlayers.onSnapshot(function(snapshot){
                snapshot.docChanges().forEach(function (change) {
                     let aPlayer = {
@@ -128,6 +168,13 @@ let fs = {
                          if(aPlayer.status ==5 && mainUser.userName == aPlayer.userName && aPlayer.duelId == ""){
                               aPlayer.wins++;
                               db.collection('users').doc(curPlayer.docs[0].id).set({duelId:"", status:2, wins:aPlayer.wins}, { merge: true })
+                              .catch(function(error) {
+                                   $("#mainModal .modal-title").text(`Error while awarding win due to opponent logout.`);          
+                                   $("#mainModal .modal-body").text(error);
+                                   $("#mainModal .modal-footer").css("display","none");
+                                   $("#mainModal").modal(); 
+                                   return;                       
+                               });
                               clearInterval(gameControls.theTimer);
                          }
                          let ind = allPlayers.findIndex(function(obj){
@@ -138,6 +185,13 @@ let fs = {
                     if (change.type === "removed") {
                          aPlayer.duelId="";
                          theStatus = db.collection('users').doc(curPlayer.docs[0].id).set({duelId:""}, { merge: true })
+                         .catch(function(error) {
+                              $("#mainModal .modal-title").text(`Error while removing duel id from logged out player.`);          
+                              $("#mainModal .modal-body").text(error);
+                              $("#mainModal .modal-footer").css("display","none");
+                              $("#mainModal").modal(); 
+                              return;                       
+                          });
                          gameControls.removePlayer(aPlayer);
                          gameControls.resetCard();
                          allPlayers.filter(function(obj){
@@ -147,7 +201,7 @@ let fs = {
                });
           })
      }, 
-     logOut: async (userName, thisObj) => {
+     logOut: async (userName, thisObj, force = false) => {
           db = firebase.firestore(); 
           if(thisObj.status == 5) {
                console.log(`${thisObj.name} will forefit`);  
@@ -156,13 +210,34 @@ let fs = {
           }         
           thisObj.status = 1;           
           let  theStatus = await db.collection('users').doc(userName);
-          theStatus.set({
-               status: 1,
-               wins: thisObj.wins,
-               loses: thisObj.loses,
-               ties:thisObj.ties,
-               duelId:""
-          }, { merge: true });          
+          if(force){
+               theStatus.set({
+                    status: 1,
+                    duelId:""
+               }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while logging out user.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+                });
+          }else{
+               theStatus.set({
+                    status: 1,
+                    wins: thisObj.wins,
+                    loses: thisObj.loses,
+                    ties:thisObj.ties,
+                    duelId:""
+               }, { merge: true }).catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while force log out user.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+                });
+          }
+                    
           gameControls.hideMainStage();
      },
      issueChallenge: async (challenger, opponent) => {
@@ -187,23 +262,45 @@ let fs = {
                     duelId:docRef.id,
                     challenger:true
                }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while setting status of challenger to challenging.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+                })
                .then(
                     db.collection('users').doc(opponent).set({
                          status: 3,
                          duelId:docRef.id,
                          challenger:false
-                    }, { merge: true }),
+                    }, { merge: true })
+                    .catch(function(error) {
+                         $("#mainModal .modal-title").text(`Error while changing status of challenged to challenged.`);          
+                         $("#mainModal .modal-body").text(error);
+                         $("#mainModal .modal-footer").css("display","none");
+                         $("#mainModal").modal(); 
+                         return;                       
+                     }),
                     fs.watchChallenge(docRef.id)
                )
                .catch(function(error) {
-                    console.error("Error adding challenger status: ", error);
-               });
+                    $("#mainModal .modal-title").text(`Error while adding a duel.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+                })
                
                
           })
           .catch(function(error) {
-               console.error("Error adding challenge: ", error);
-          })         
+               $("#mainModal .modal-title").text(`Error while adding a challenge.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           })      
      },
      rejectChallenge: async () => {
           db = firebase.firestore();
@@ -214,16 +311,34 @@ let fs = {
                challenger:false
                }, { merge: true })
           )
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while setting status of challenged to online.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+          })
           .then(
                db.collection('users').doc(mainUser.userName).set({
                     status: 2,
                     duelId:"",
                     challenger:false
-               }, { merge: true }),
+               }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while setting status of challenger to online.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               }),
                $("#mainModal").modal("hide")
           )
           .catch(function(error) {
-               console.error("Error adding challenger status: ", error);
+               $("#mainModal .modal-title").text(`Error while adding challenger status.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
           });
      }, 
      acceptChallenge: async () => {
@@ -231,15 +346,32 @@ let fs = {
                status: 5,
                challenger: true
                }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while setting status of challenged to in duel.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               })
           .then(
                db.collection('users').doc(mainUser.userName).set({
                     status: 5,
                     challenger: false
-               }, { merge: true }),
+               }, { merge: true }).catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while setting status of challenger to in duel.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               }),
                $("#mainModal").modal("hide")
           )
           .catch(function(error) {
-               console.error("Error adding challenger status: ", error);
+               $("#mainModal .modal-title").text(`Error while setting challenger status to in duel.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
           });
           fs.watchChallenge(mainUser.duelId);
      },
@@ -250,15 +382,28 @@ let fs = {
                     opp1C : value,
                     challengeRematch:null,
                     rematchTo:null
-               }, { merge: true });
+               }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while saving opponent 1 choice.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               });
      
           }else{
                playerChoice.set({
                     opp2C : value,
                     challengeRematch:null,
                     rematchTo:null
-               }, { merge: true });
-     
+               }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while saving opponent 2 choice.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               });
           }
           
      },
@@ -283,9 +428,15 @@ let fs = {
                     challenger.wins++;
                     opponent.loses++;
                }
-               
                gameControls.showResults(result, retChoice);
-          });
+          })
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while checking the game results.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });
      },
      removeDuel: (player1, player2) => {
           let  duel = db.collection('challenges').doc(player1.duelId);
@@ -301,6 +452,13 @@ let fs = {
                     challenger:false
                }, { merge: true }
           )
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while attempting to set player status to online after duel.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+          })
           .then(function(){
                db.collection('users').doc(player2.userName).set({
                     status : 2,
@@ -311,6 +469,13 @@ let fs = {
                     rematchTo:null,
                     challenger:false
                }, { merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while attempting to set player 2 status to online after duel.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               })
           });         
      },
      challengeRematch: () => {
@@ -320,12 +485,26 @@ let fs = {
                rematchTo: myOpp.userName,
                opp1C:null,
                opp2C:null
-          }, {merge: true});
+          }, {merge: true})
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while attempting to issue rematch challenge.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+          });
      },
      watchChallenge: (arg) =>{
           db = firebase.firestore();
           let duel = db.collection("challenges").doc(arg);
-          duel.get();
+          duel.get()
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while setting monitoring of game.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+           });;
           duel.onSnapshot(function(snapshot){
                if(snapshot.data() == undefined){
                     gameControls.resetCard();
@@ -344,6 +523,13 @@ let fs = {
                challengeRematch:"",
                rematchTo:""
           }, {merge: true })
+          .catch(function(error) {
+               $("#mainModal .modal-title").text(`Error while attempting to save results after duel.`);          
+               $("#mainModal .modal-body").text(error);
+               $("#mainModal .modal-footer").css("display","none");
+               $("#mainModal").modal(); 
+               return;                       
+          })
           .then(function(){
                db.collection("users").doc(myOpp.userName).set({
                     wins: myOpp.wins,
@@ -351,7 +537,14 @@ let fs = {
                     ties: myOpp.ties,
                     challengeRematch:"",
                     rematchTo:""
-               }, {merge: true });
+               }, {merge: true })
+               .catch(function(error) {
+                    $("#mainModal .modal-title").text(`Error while attempting to save player 2 results after duel.`);          
+                    $("#mainModal .modal-body").text(error);
+                    $("#mainModal .modal-footer").css("display","none");
+                    $("#mainModal").modal(); 
+                    return;                       
+               });
           })
      }
 }
