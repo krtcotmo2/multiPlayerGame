@@ -36,6 +36,11 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
      top: 12px;}
 #curPlayerHeader h2{display: inline;}
 
+/* ROW HOLDING PLAYERS, GAME, AND LEADERBOARD */
+#mainGame{padding-bottom:60px;}
+#mainGame .card{max-height:calc(100% - 200px); oveflow:hidden; overflow-y:auto;}
+
+
 /* CURRENT PLAYER SECTION*/
 #players{min-height: 124px;}
 .aPlayer{padding:24px 12px; cursor:pointer; border-bottom:1px solid #ccc;}
@@ -47,7 +52,6 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 
 
 /* CURRENT GAME SECTION*/
-#mainGame{padding-bottom:60px;}
 .optionImg{
      border-radius: 30px;
      cursor: pointer;
