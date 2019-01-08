@@ -4,7 +4,7 @@ body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvet
      body, #message { margin-top: 0; background: white; box-shadow: none; }
      body { border-top: 16px solid #ffa100; }
 }
-footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 100%; border-top:1px solid #ccc;}
+footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 100%; border-top:1px solid #ccc; background:white;}
 .card-body{padding:0px;}
 
 /* LOGIN SECTION */
@@ -28,7 +28,7 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
      display: block;
 }
 
-/* HEADER OF PAGE SHOWING CURRNET LOGGED IN PERSON AND LOG OUT BUTTON */
+/* HEADER OF PAGE SHOWING CURRENT LOGGED IN PERSON AND LOG OUT BUTTON */
 #curPlayerHeader{display: none;}
 #curPlayerHeader button{    margin-right: 12px;
      position: absolute;
@@ -47,6 +47,7 @@ footer{position: fixed; bottom: 0px; padding:12px; text-align: center; width: 10
 
 
 /* CURRENT GAME SECTION*/
+#mainGame{padding-bottom:60px;}
 .optionImg{
      border-radius: 30px;
      cursor: pointer;
