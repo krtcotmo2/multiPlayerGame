@@ -29,6 +29,7 @@ let myOpp = {
 
 let gameControls = {
      theTimer:0,
+     theTimeOut:0,
      showMainStage: player => {
           $("#mainGame").css("display", "flex");
           $("#login").addClass("loggedIn");
@@ -118,6 +119,9 @@ let gameControls = {
           $(".gameResults").addClass("d-none");
           $(".rematchResponse .oppName").text(myOpp.name);
           $(".rematchResponse").removeClass("d-none");
+          theTimeOut = setTimeout(function(){
+               fs.removeDuel(mainUser, myOpp);
+          }, 10000)
      },
      setLeaderBoard: () => {
           $("#leaderBoard").html("");
