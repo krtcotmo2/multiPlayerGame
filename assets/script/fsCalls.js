@@ -108,7 +108,7 @@ let fs = {
                          loses: change.doc.data().loses,
                          status: change.doc.data().status,
                          duelId: change.doc.data().duelId,
-                         points: (change.doc.data().wins*2) + (change.doc.data().ties),
+                         points: (change.doc.data().wins) - (change.doc.data().loses),
                          winPercent: change.doc.data().wins/(change.doc.data().wins + change.doc.data().loses + change.doc.data().ties)
                     };
                     let ind = leaderBoard.findIndex(function(obj){
