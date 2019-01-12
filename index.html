@@ -164,7 +164,7 @@
                     const settings = { timestampsInSnapshots: true };
                     firestore.settings(settings);
                } catch (e) {
-                    document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
+                    document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the debugger.';
                }
                fs.syncPlayers();
                fs.getLeaderboard();
